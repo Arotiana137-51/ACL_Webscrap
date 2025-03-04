@@ -110,7 +110,7 @@ def scrape_product_page(driver, url, position):
         # Scrape all fields, handling multiple elements
         initial_data = {
             "A. UNIQUE_ID": time.now().strftime("%Y%m%d%H%M%S") + str(position),
-            "B. APPAREL_TYPOLOGY": get_elements_text("div.pdp-infos-cont.pdp-infos-cont-bottom > div.breadcrumb > a:last-of-type"),
+            "B. APPAREL_TYPOLOGY": get_elements_text("#main-block-wrapper > div.blocks.flex.flex-col.pb-\[--pdp-sticky-details-height\].lg\:pb-0.pt-\[var\(--header-height\)\].lg\:pt-0 > div.overflow-auto.lg\:grid.lg\:grid-cols-12.lg\:gap-x-4.lg\:overflow-visible.lg\:px-4 > div.lg\:min-h-auto.lg\:static.lg\:grid-cols-6.lg\:overflow-visible.lg\:bottom-auto.lg\:top-0.lg\:col-span-6.lg\:col-start-7.lg\:row-start-1 > div > div.mb-auto.flex.w-full.flex-col.justify-center.px-3\.75.lg\:grid.lg\:grid-cols-6.lg\:gap-4.lg\:gap-y-0.lg\:px-0.lg\:pt-9 > div.col-span-full.flex.flex-col.pt-\[1\.3125rem\].lg\:col-span-4.lg\:gap-8.lg\:pl-2.-mx-3\.75.px-3\.75.lg\:mx-0.lg\:pr-0 > div.relative.ml-\[-1\.125rem\].w-full.hidden.font_small_xs_regular.lg\:mb-\[max\(5rem\,5\.3vw\)\].lg\:block > div > a:nth-last-child(-n+5)"),
             "C. AGENT_NAME": "Aro",
             "D. BRAND": get_elements_text("div.pdp-infos-cont.pdp-infos-cont-bottom > div.pdp-infos > div.brand-name"),
             "E. WEBSITE_URL": "https://www.ralphlauren.com/",
@@ -164,7 +164,7 @@ def scrape_product_page(driver, url, position):
         return product_data
         
     except TimeoutException:
-        print(f"Timeout on {url} - possible CAPTCHA")
+        print(f" Timeout or selector not found on  {url} - possible CAPTCHA")
         input("Please solve CAPTCHA and press Enter to continue...")
         return scrape_product_page(driver, url, position)  # Retry after CAPTCHA
     except Exception as e:
