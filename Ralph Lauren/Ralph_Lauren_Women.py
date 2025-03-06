@@ -282,77 +282,52 @@ def scrape_product_page(driver, url, position):
         # Extract page number from the URL
         page_number = extract_page_number(url)
         
-        # Scrape all fields, handling multiple elements
         initial_data = {
-            "A. UNIQUE_ID":datetime.now().strftime("%Y-%m-%d-%H-%M-%S"),
-            "B. APPAREL_TYPOLOGY": get_elements_text("B",driver," div.breadcrumb.pdp__breadcrumb.new-pdp__breadcrumb > div > a > small > span"),
+            "A. UNIQUE_ID": time.now().strftime("%Y%m%d%H%M%S") + str(position),
+            "B. APPAREL_TYPOLOGY": get_elements_text("",driver,"div.pdp-infos-cont.pdp-infos-cont-bottom > div.breadcrumb > a:last-of-type"),
             "C. AGENT_NAME": "Aro",
-            "D. BRAND": "Tom Tailor", #get_elements_text("D",driver,"div.ProductHeading > div.ProductHeading__brand--container > a"),
+            "D. BRAND": get_elements_text("",driver,"div.pdp-infos-cont.pdp-infos-cont-bottom > div.pdp-infos > div.brand-name"),
             "E. WEBSITE_URL": get_base_url(url),
             "F. PRODUCT_URL": url,
-            "G. CITY": "Garstedter Weg 14, 22453 Hamburg",
-            "H. WEBSITE_COUNTRY": "Germany",
-            "I. GENDER":"Woman", # get_elements_text("I",driver,"#main-block-wrapper > div.blocks.flex.flex-col.pb-\[--pdp-sticky-details-height\].lg\:pb-0.pt-\[var\(--header-height\)\].lg\:pt-0 > div.overflow-auto.lg\:grid.lg\:grid-cols-12.lg\:gap-x-4.lg\:overflow-visible.lg\:px-4 > div.lg\:min-h-auto.lg\:static.lg\:grid-cols-6.lg\:overflow-visible.lg\:bottom-auto.lg\:top-0.lg\:col-span-6.lg\:col-start-7.lg\:row-start-1 > div > div.mb-auto.flex.w-full.flex-col.justify-center.px-3\.75.lg\:grid.lg\:grid-cols-6.lg\:gap-4.lg\:gap-y-0.lg\:px-0.lg\:pt-9 > div.col-span-full.flex.flex-col.pt-\[1\.3125rem\].lg\:col-span-4.lg\:gap-8.lg\:pl-2.-mx-3\.75.px-3\.75.lg\:mx-0.lg\:pr-0 > div.relative.ml-\[-1\.125rem\].w-full.hidden.font_small_xs_regular.lg\:mb-\[max\(5rem\,5\.3vw\)\].lg\:block > div > a:nth-child(3)"),
-            "J. SEASON": "unknown", #get_elements_text(driver,"season-selector"),
-            "K. PRODUCT_CATEGORY": get_elements_text("K",driver," div.breadcrumb.pdp__breadcrumb.new-pdp__breadcrumb > div:last-child> a > small > span"),
-            "L. PRODUCT_NAME": get_elements_text("L",driver," div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.product-info__content > div.product-tile__content > h5 > span"),
-            "M. PRODUCT_REFERENCE":get_elements_text("M",driver,"div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.more-info.accordion.accordion--transparent.more-info--small > div > div > div > div > ul > li:last-child"),
-            "N. PRODUCT_DESCRIPTION": "In Peripherals",#get_elements_text("N",driver,"div.ProductHeroGridContainer > div.ProductHeroGridContainer__details > div > div.ProductHeroDescription.padt8.padb6 > div > div > div > p"),
-            "O. PATTERN": get_elements_text("O",driver,'#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.more-info.accordion.accordion--transparent.more-info--small > div > div > div > div > ul > li:nth-child(1)'),
-            "P. STYLE": get_elements_text("P",driver,'#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.more-info.accordion.accordion--transparent.more-info--small > div > div > div > div > ul > li:nth-child(2)'),
-            "S. PERIPHERALS": get_elements_text("S",driver,'#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.more-info.accordion.accordion--transparent.more-info--small > div > div > div > div > ul > li'),
-            "U. MAIN_BODY_COLOUR": get_elements_text("U",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.variants.product-info__variants > h5"),
-            "V. LIST_OF_COLORS":click_and_extract_text("V",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.variants.product-info__variants > div > div > div.variant.new-variant.variants__variant", "div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.variants.product-info__variants > h5"),
-            "Z. RETAIL_CURRENCY":"€",# extract_currency_symbol(get_elements_text(driver," div.pdp-infos-cont.pdp-infos-cont-bottom > div.pdp-infos > div.product-price > span")),
-            "ZA. PRICE": extract_number(get_elements_text("ZA-Promo",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.product-info__content > div.product-tile__content > div > span.product-tile__price.product-tile__price--dashed > span") or get_elements_text("ZA-Normal",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.product-info__content > div.product-tile__content > div > span.product-tile__price")),
-            "ZB. ON_SALE": "Yes",#get_elements_text(driver,"sale-selector"),
-            "ZC. SALE_TYPE":get_elements_text("ZC",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.product-info__content > div.flex.flex--justify-between.hide-mobile > div > div.flag.flag--danger.flag--sm.flag--ordered.flag--sale.new-flag > p > span") or "Normal sale",
-            "ZD. SALE_AMOUNT": extract_number(get_elements_text("ZD-a",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.product-info__content > div.product-tile__content > div > span.product-tile__price.product-tile__price--sale") or get_elements_text("ZD-b",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.product-info__content > div.product-tile__content > div > span.product-tile__price")),
-            "ZF. FEATURED_PRODUCT": get_elements_text("ZF",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.product-info__content > div.flex.flex--justify-between.hide-mobile > div > div.flag.flag--secondary.flag--sm.flag--ordered.flag--be-part.new-flag > p > span") or "Product not featured",
-            "ZG. MAIN_IMAGE_URL": get_elements_attribute("ZG",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-gallery.pdp__gallery.new-product-gallery > div.hide-mobile.product-gallery--flex.pdp__gallery.new-product-gallery.product-gallery--flex-ct-7 > div:nth-child(2) > img", "src"),
-            "ZH. IMAGE_META_TAGS": get_elements_attribute("ZH",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-gallery.pdp__gallery.new-product-gallery > div.hide-mobile.product-gallery--flex.pdp__gallery.new-product-gallery.product-gallery--flex-ct-7 > div:nth-child(2) > img", "alt"),
+            "G. CITY": "New York",
+            "H. WEBSITE_COUNTRY": "USA",
+            "I. GENDER": get_elements_text("",driver,"#product-content > div.pdp-infos-cont.pdp-infos-cont-bottom > div.breadcrumb > a:nth-child(2)"),
+            "J. SEASON": "unknown", #get_elements_text("",driver,"season-selector"),
+            "K. PRODUCT_CATEGORY": get_elements_text("",driver,"#product-content > div.pdp-infos-cont.pdp-infos-cont-bottom > div.breadcrumb > a:last-of-type"),
+            "L. PRODUCT_NAME": get_elements_text("",driver," div.product-favorite-cont > h1"),
+            "N. PRODUCT_DESCRIPTION": get_elements_text("",driver," div.pdp-product-details > div.pdp-details-description.js-clamped > div"),
+            "R. NON_IRON": "unknown",# get_elements_text("",driver,"non-iron-selector"),
+            "S. PERIPHERALS": get_elements_text("",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li"),
+            "U. MAIN_BODY_COLOUR": get_elements_text("",driver," div.product-variations.pdp-content.dfrefreshcont > ul > li.js-attribute-wrapper.attribute.colorname > div > div.attribute-top-links > span.js-selected-value-wrapper.selected-value.select-attribute.selected-color"),
+            "V. LIST_OF_COLORS": get_elements_text("",driver," div.s7viewer-swatches.swiper-container.color-swatches-wrapper > ul > li.variations-attribute.selectable> div > a"),
+            "X. IDENTIFIED AS SUSTAINABLE":"unknown",# get_elements_text("",driver,"sustainable-selector"),
+            "Z. RETAIL_CURRENCY": extract_currency_symbol(get_elements_text("",driver," div.pdp-infos-cont.pdp-infos-cont-bottom > div.pdp-infos > div.product-price > span")),
+            "ZA. PRICE": extract_number(get_elements_text("",driver," div.pdp-infos-cont.pdp-infos-cont-bottom > div.pdp-infos > div.product-price > span")),
+            "ZB. ON_SALE": "Yes",#get_elements_text("",driver,"sale-selector"),
+            "ZC. SALE_TYPE":"Normal Sale",#get_elements_text("",driver,"sale-type-selector"),
+            "ZD. SALE_AMOUNT": extract_number(get_elements_text("",driver," div.pdp-infos-cont.pdp-infos-cont-bottom > div.pdp-infos > div.product-price > span")),
+            "ZE. CIEL_TEX_PRODUCT": "unknown",#get_elements_text("",driver,"ciel-tex-selector"),
+            "ZF. FEATURED_PRODUCT": "unknown",#get_elements_text("",driver,"featured-selector"),
+            "ZG. MAIN_IMAGE_URL": get_elements_attribute("#pdpMain > div.pdp-top-cont.js-product-top-content-container > div.js-product-images-section.pdp-left-col > div > div.pdp-media-container.js-pdp-media-container.js-pdp-video-container > div > div.swiper-wrapper > div:nth-child(1) > div > picture > source:nth-child(1)", "src"),
+            "ZH. IMAGE_META_TAGS": get_elements_attribute(" div.pdp-top-cont.js-product-top-content-container > div.js-product-images-section.pdp-left-col > div > div.pdp-media-container.js-pdp-media-container.js-pdp-video-container > div > div.swiper-wrapper > div:nth-child(1) > div > picture > img", "alt"),
+            "ZI. SIZE_SET": get_elements_text("",driver," li.js-attribute-wrapper.attribute.primarysize.sizing > div > ul > li> a > span > bdi"),
+            "ZJ. SIZE_AVAILABILITY": get_elements_text("",driver," li.js-attribute-wrapper.attribute.primarysize.sizing > div > ul > li> a > span > bdi"),
             "ZK. POSITION": position,
             "ZL. PAGE_NUMBER": page_number, # Now using the extracted page number
             "Shirts and Trousers":position
         }
             # Click description button and get remaining elements
-        # features_data = {} 
-        # if click_btn(driver,'[data-testid="product-info-navigation-details-description-button"]'):
-        #     features_data = {
-        #         "S. PERIPHERALS": get_elements_text("S",driver,'#ProductPageHero > div > div.ProductHeroGridContainer > div.ProductHeroGridContainer__details > div > div.Accordion > div:nth-child(1) > div.AccordionItem__items > div > div > div > ul > li'),
-        #         "ZE. CIEL_TEX_PRODUCT": "unknown",#get_elements_text("ZE",driver,"#product-materials-suppliers > div > div > ul > li > ul > li:nth-of-type(2) > p"),
-        #         "Y. KNITTING_WOVEN":"unknown",#get_elements_text(driver,""),
-        #     }
-
-        materials_data = {}
-        if (click_btn(driver,'#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div:nth-last-child(2) > button')):
-            random_delay(driver)
-            materials_data = {
-                "W. FABRIC_COMPOSITION": get_elements_text("W",driver,'#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.more-info.accordion.accordion--transparent.more-info--small > div > div > div > div:nth-child(1) > ul > li:nth-child(2)'),
-                "R. NON_IRON":get_elements_attribute("R. Attr",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.more-info.accordion.accordion--transparent.more-info--small > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div > span > img","alt")+  get_elements_text("R",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.more-info.accordion.accordion--transparent.more-info--small > div > div > div > div:nth-child(2) > div > div:nth-child(2) > ul > li"),
-                "T. COUNTRY_OF_ORIGIN": get_elements_text("T",driver,"#ProductPageHero > div > div.ProductHeroGridContainer > div.ProductHeroGridContainer__details > div > div.Accordion > div:nth-child(2) > div.AccordionItem__items > div > div > div > ul > li:nth-child(2)"),
-            }
-
-        size_data = {}
-        if click_btn(driver,'#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.size-buttons.new-size-buttons.product-info__sizes > div.size-buttons__text-container > div > div > span'):
-            random_delay(driver)
-            size_data = {
-                "ZI. SIZE_SET": get_elements_text("ZI",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.size-buttons.new-size-buttons.product-info__sizes > div.size-buttons__text-container > div > div > div.modal.size-guides-modal.modal--centered.modal-enter-done > div.modal__body > div > div > table > thead > tr > th:not(:first-child)"),
-                "ZJ. SIZE_AVAILABILITY": get_elements_text("ZJ",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.size-buttons.new-size-buttons.product-info__sizes > div.size-buttons__text-container > div > div > div.modal.size-guides-modal.modal--centered.modal-enter-done > div.modal__body > div > div > table > thead > tr > th:not(:first-child)"),
-            }
-            click_btn(driver,'#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.size-buttons.new-size-buttons.product-info__sizes > div.size-buttons__text-container > div > div > div.modal.size-guides-modal.modal--centered.modal-enter-done > div.modal__header > svg') # Close size selector
-        
-        fit_data = {}
-        if click_btn(driver,'#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div:nth-child(6) > button'):
-            random_delay(driver)
-            fit_data = {
-                "Q. FIT": get_elements_text("Q",driver,'#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.more-info.accordion.accordion--transparent.more-info--small > div > div > div > div > ul > li:nth-child(1)'),
-            }
-        sustainability_data = {}
-        if click_btn(driver,'#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div:nth-child(7) > button'):
-            random_delay(driver)
-            sustainability_data = {
-                "X. IDENTIFIED AS SUSTAINABLE":get_elements_text("X",driver,"#newPdp > div.pdp__flex.new-pdp__flex > div.product-info.new-product-info.pdp__info.product-info--sticks-to-bottom.new-product-info--sticks-to-bottom > div.more-info.accordion.accordion--transparent.more-info--small > div > div > div > div > p:nth-child(2) > span") or "Unknown",
+        description_data = {} 
+        if click_btn(driver,"#product-content > div.pdp-product-details > ul > li:nth-child(1) > button"):
+            description_data = {
+                "M. PRODUCT_REFERENCE": get_elements_text("",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li.style-number.js-extra > span.screen-reader-digits"),
+                "O. PATTERN": get_elements_text("",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(4)"),
+            	"P. STYLE": get_elements_text("",driver,"#app-wrapper > div > main > div.grid-x.margin-top-xs > div > div > div > div.large-offset-1.xlarge-5.xlarge-offset-0.cell.medium-6.large-5 > div.title > h1 > span"),
+                "Q. FIT": get_elements_text("",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(1)"),
+                "S. PERIPHERALS": get_elements_text("",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li"),
+                "T. COUNTRY_OF_ORIGIN": get_elements_text("",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(8)"),
+                "W. FABRIC_COMPOSITION": get_elements_text("",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(6)"),
+                "Y. KNITTING_WOVEN": get_elements_text("",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(4)"),
             }
         
       
@@ -361,11 +336,8 @@ def scrape_product_page(driver, url, position):
         # Step 1: Combine all dictionaries into one
         all_data = {}
         all_data.update(initial_data)
-        all_data.update(fit_data)
-        all_data.update(sustainability_data)
-        all_data.update(materials_data)
-        all_data.update(size_data)
-    
+        all_data.update(description_data )
+
 
         # Step 2: Define prefix extraction logic
         def get_prefix(key):
@@ -392,7 +364,7 @@ def scrape_product_page(driver, url, position):
 
 def main():
     product_name = "TomTailor_Women_Blouses"
-    product_link_selector = "a.product-tile--linked"
+    product_link_selector = "div.product-name-row.favorite-enabled > div.product-name > a"
     driver = setup_chrome_driver()
     all_product_links = []
     seen_hrefs = set()
@@ -402,7 +374,7 @@ def main():
     scroll_attempts = 0
 
     try:
-        main_url = check_redirection("https://www.tom-tailor.eu/women/clothing/blouses")
+        main_url = check_redirection("https://www.ralphlauren.com/women-clothing-sweaters?webcat=content-women-clothing-sweaters&ab=en_US_WLP_Slot_2_S1_Image_SHOP")
         driver.get(main_url)
         random_delay(driver)  # Reduced initial delay
 
