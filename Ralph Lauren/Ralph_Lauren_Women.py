@@ -1,5 +1,5 @@
-#import  undetected_chromedriver as uc
-from selenium import webdriver
+import  undetected_chromedriver as uc
+#from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -15,22 +15,19 @@ from urllib.parse import urlparse, parse_qs
 import re
 from datetime import datetime
 
-
 def setup_chrome_driver():
     service = Service(r'C:\\Users\\Arotiana\\Documents\\CromeDriver\\chromedriver-win64\\chromedriver.exe')
     options = Options()
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-extensions")
     options.add_argument("--start-maximized")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
+    #options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    #options.add_experimental_option('useAutomationExtension', False)
    # options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.53 Safari/537.36')
 
     # Initialize undetected Chrome driver
-    # driver = uc.Chrome(service=service, options=options)
-
-
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = uc.Chrome(service=service, options=options)
+    #driver = webdriver.Chrome(service=service, options=options)
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     
     
@@ -223,6 +220,13 @@ def click_center_of_screen(driver):
     # Move the mouse back to the initial position
     actions.move_by_offset(-center_x, -center_y).perform()
 
+def check_knit_or_woven(text):
+    text_lower = text.lower()
+    if "knit" in text_lower:
+        return "knit"
+    elif "woven" in text_lower:
+        return "woven"
+    return "unknown"
 
 def click_and_extract_text(letter, driver, click_selector, text_selector):
     extracted_texts = []
@@ -283,7 +287,7 @@ def scrape_product_page(driver, url, position):
         page_number = extract_page_number(url)
         
         initial_data = {
-            "A. UNIQUE_ID": time.now().strftime("%Y%m%d%H%M%S") + str(position),
+            "A. UNIQUE_ID": datetime.now().strftime("%Y-%m-%d-%H-%M-%S"),
             "B. APPAREL_TYPOLOGY": get_elements_text("B",driver,"div.pdp-infos-cont.pdp-infos-cont-bottom > div.breadcrumb > a:last-of-type"),
             "C. AGENT_NAME": "Aro",
             "D. BRAND": get_elements_text("D",driver,"div.pdp-infos-cont.pdp-infos-cont-bottom > div.pdp-infos > div.brand-name"),
@@ -295,9 +299,9 @@ def scrape_product_page(driver, url, position):
             "J. SEASON": "unknown", #get_elements_text("J",driver,"season-selector"),
             "K. PRODUCT_CATEGORY": get_elements_text("K",driver,"#product-content > div.pdp-infos-cont.pdp-infos-cont-bottom > div.breadcrumb > a:last-of-type"),
             "L. PRODUCT_NAME": get_elements_text("L",driver," div.product-favorite-cont > h1"),
+            "Y. KNITTING_WOVEN": check_knit_or_woven(get_elements_text("Y",driver,"div.product-favorite-cont > h1")),
             "N. PRODUCT_DESCRIPTION": get_elements_text("N",driver," div.pdp-product-details > div.pdp-details-description.js-clamped > div"),
             "R. NON_IRON": "unknown",# get_elements_text("R",driver,"non-iron-selector"),
-            "S. PERIPHERALS": get_elements_text("S",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li"),
             "U. MAIN_BODY_COLOUR": get_elements_text("U",driver," div.product-variations.pdp-content.dfrefreshcont > ul > li.js-attribute-wrapper.attribute.colorname > div > div.attribute-top-links > span.js-selected-value-wrapper.selected-value.select-attribute.selected-color"),
             "V. LIST_OF_COLORS": get_elements_text("V",driver," div.s7viewer-swatches.swiper-container.color-swatches-wrapper > ul > li.variations-attribute.selectable> div > a"),
             "X. IDENTIFIED AS SUSTAINABLE":"unknown",# get_elements_text("X",driver,"sustainable-selector"),
@@ -308,8 +312,8 @@ def scrape_product_page(driver, url, position):
             "ZD. SALE_AMOUNT": extract_number(get_elements_text("ZD",driver," div.pdp-infos-cont.pdp-infos-cont-bottom > div.pdp-infos > div.product-price > span")),
             "ZE. CIEL_TEX_PRODUCT": "unknown",#get_elements_text("ZE",driver,"ciel-tex-selector"),
             "ZF. FEATURED_PRODUCT": "unknown",#get_elements_text("ZF",driver,"featured-selector"),
-            "ZG. MAIN_IMAGE_URL": get_elements_attribute("ZG",driver,"pdpMain > div.pdp-top-cont.js-product-top-content-container > div.js-product-images-section.pdp-left-col > div > div.pdp-media-container.js-pdp-media-container.js-pdp-video-container > div > div.swiper-wrapper > div:nth-child(1) > div > picture > source:nth-child(1)", "src"),
-            "ZH. IMAGE_META_TAGS": get_elements_attribute("ZH",driver,"div.pdp-top-cont.js-product-top-content-container > div.js-product-images-section.pdp-left-col > div > div.pdp-media-container.js-pdp-media-container.js-pdp-video-container > div > div.swiper-wrapper > div:nth-child(1) > div > picture > img", "alt"),
+            "ZG. MAIN_IMAGE_URL": get_elements_attribute("ZG",driver,"#pdpMain > div.pdp-top-cont.js-product-top-content-container.short-vertical > div.js-product-images-section.pdp-left-col > div > div.pdp-media-container.js-pdp-media-container.js-pdp-video-container.with-asset > div > div.swiper-wrapper > div:nth-child(1) > div > picture > img", "data-img"),
+            "ZH. IMAGE_META_TAGS": get_elements_attribute("ZH",driver,"#pdpMain > div.pdp-top-cont.js-product-top-content-container.short-vertical > div.js-product-images-section.pdp-left-col > div > div.pdp-media-container.js-pdp-media-container.js-pdp-video-container.with-asset > div > div.swiper-wrapper > div:nth-child(1) > div > picture > img", "alt"),
             "ZI. SIZE_SET": get_elements_text("ZI",driver," li.js-attribute-wrapper.attribute.primarysize.sizing > div > ul > li> a > span > bdi"),
             "ZJ. SIZE_AVAILABILITY": get_elements_text("ZJ",driver," li.js-attribute-wrapper.attribute.primarysize.sizing > div > ul > li> a > span > bdi"),
             "ZK. POSITION": position,
@@ -319,15 +323,15 @@ def scrape_product_page(driver, url, position):
             # Click description button and get remaining elements
         description_data = {} 
         if click_btn(driver,"#product-content > div.pdp-product-details > ul > li:nth-child(1) > button"):
+            random_delay(driver)
             description_data = {
                 "M. PRODUCT_REFERENCE": get_elements_text("M",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li.style-number.js-extra > span.screen-reader-digits"),
                 "O. PATTERN": get_elements_text("O",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(4)"),
-            	"P. STYLE": get_elements_text("P",driver,"#app-wrapper > div > main > div.grid-x.margin-top-xs > div > div > div > div.large-offset-1.xlarge-5.xlarge-offset-0.cell.medium-6.large-5 > div.title > h1 > span"),
+            	"P. STYLE": get_elements_text("P",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div > ul > li:nth-child(3)"),
                 "Q. FIT": get_elements_text("Q",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(1)"),
-                "S. PERIPHERALS": get_elements_text("S",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li"),
+                "S. PERIPHERALS": get_elements_text("S",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div > ul > li"),
                 "T. COUNTRY_OF_ORIGIN": get_elements_text("T",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(8)"),
-                "W. FABRIC_COMPOSITION": get_elements_text("W",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(6)"),
-                "Y. KNITTING_WOVEN": get_elements_text("Y",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(4)"),
+                "W. FABRIC_COMPOSITION": get_elements_text("W",driver,"body > div.rl-toaster.from-right.pdp-flyout.full-height.is-pdp-redesign.r24-form.js-details-flyout.opened > div.rl-toaster-content > div > div > div > div.bullet-list > ul > li:nth-child(5)"),
             }
         
       
@@ -363,14 +367,14 @@ def scrape_product_page(driver, url, position):
 
 
 def main():
-    product_name = "TomTailor_Women_Blouses"
+    product_name = "Ralph Lauren Women"
     product_link_selector = "div.product-name-row.favorite-enabled > div.product-name > a"
     driver = setup_chrome_driver()
     all_product_links = []
     seen_hrefs = set()
     idx = 1
     retries = 0
-    max_retries = 8  # Reduced from 20 since we're more efficient
+    max_retries = 50
     scroll_attempts = 0
 
     try:
