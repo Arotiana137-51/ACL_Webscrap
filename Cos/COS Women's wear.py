@@ -246,42 +246,45 @@ def main():
     driver = setup_chrome_driver()
     all_products = []
     current_batch = []
-    batch_size = 100 # Save to Excel every n products
+    batch_size = 100  # Save to Excel every n products
     
     try:
-        # Get main product grid page, so for the page here the linkso on that rowI want to scrap  the pages https://www.cos.com/fr-fr/women/view-all?page=6 (here it is six but it should loop from 1 to 88 in that link. so scrap  page and increase the page in the link and scrap and so on
-        main_url=check_redirection("https://www.cos.com/fr-fr/women/view-all?page=6")
-        driver.get(main_url)
-        # Get all product links with their positions
+        # Loop through pages 1 to 88
+        for page in range(1, 89):
+            main_url = f"https://www.cos.com/fr-fr/women/view-all?page={page}"
+            main_url = check_redirection(main_url)
+            driver.get(main_url)
 
-
-        product_elements = driver.find_elements(By.CSS_SELECTOR, "a.group.bg-main.text-main")#product-link-selector
-        product_links = [(elem.get_attribute("href"), idx + 1) for idx, elem in enumerate(product_elements)]
-        
-        for url, position in product_links:
-            product_data = scrape_product_page(driver, url, position)
-            print(url)
-            if product_data:
-                current_batch.append(product_data)
             
-            # Save batch to Excel and clear memory
-            if len(current_batch) >= batch_size:
-                df = pd.DataFrame(current_batch)
-                df.to_excel(f'products_batch_{position//batch_size}.xlsx', index=False)
-                all_products.extend(current_batch)
-                current_batch = []
+            
+            # Get all product links with their positions
+            product_elements = driver.find_elements(By.CSS_SELECTOR, "a.group.bg-main.text-main")
+            product_links = [(elem.get_attribute("href"), idx + 1) for idx, elem in enumerate(product_elements)]
+            
+            for url, position in product_links:
+                product_data = scrape_product_page(driver, url, position)
+                print(url)
+                if product_data:
+                    current_batch.append(product_data)
                 
-            time.sleep(3)  # Polite delay between requests
+                # Save batch to Excel and clear memory
+                if len(current_batch) >= batch_size:
+                    df = pd.DataFrame(current_batch)
+                    df.to_excel(f'products_batch_{page}_{position//batch_size}.xlsx', index=False)
+                    all_products.extend(current_batch)
+                    current_batch = []
+                    
+                time.sleep(3)  # Polite delay between requests
         
         # Save any remaining products
         if current_batch:
             df = pd.DataFrame(current_batch)
-            df.to_excel(f'products_batch_final.xlsx', index=False)
+            df.to_excel(f'products_batch_Cos_final.xlsx', index=False)
             all_products.extend(current_batch)
         
         # Save complete dataset
         df_all = pd.DataFrame(all_products)
-        df_all.to_excel('cos_women_6.xlsx', index=False)
+        df_all.to_excel('cos_women_all.xlsx', index=False)
             
     except Exception as e:
         print(f"Main error: {str(e)}")
