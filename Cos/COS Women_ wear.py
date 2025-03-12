@@ -7,6 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 import pandas as pd
+import os
+import random
 import time
 import requests
 from urllib.parse import urlparse, parse_qs
@@ -148,7 +150,34 @@ def click_center_of_screen(driver):
     # Move the mouse back to the initial position
     actions.move_by_offset(-center_x, -center_y).perform()
     
+def random_delay(driver):
+    WebDriverWait(driver,random.uniform(1, 5))
 
+def random_scroll(driver, intensity=1.0):
+    """Intensity-controlled scrolling with height change detection"""
+    # Get current scroll position and height
+    previous_scroll_y = driver.execute_script("return window.scrollY")
+    previous_total_height = driver.execute_script("return document.body.scrollHeight")
+    
+    # Calculate scroll distance
+    window_height = driver.execute_script("return window.innerHeight")
+    scroll_ratio = random.uniform(1.3,2)
+    scroll_distance = scroll_ratio * intensity * window_height
+    
+    # Execute scroll
+    driver.execute_script(f"window.scrollBy(0, {scroll_distance});")
+    
+     # Calculate dynamic sleep time (intensity-based)
+    min_sleep = 0.3 + (1 - intensity) * 0.7  # 0.3-1.0s range
+    max_sleep = 1.2 + (1 - intensity) * 2.3  # 1.2-3.5s range
+    time.sleep(random.uniform(min_sleep, max_sleep))
+    
+    # Check if scroll was effective
+    new_scroll_y = driver.execute_script("return window.scrollY")
+    new_total_height = driver.execute_script("return document.body.scrollHeight")
+    
+    # Return True if either the scroll position or page height changed
+    return (new_scroll_y != previous_scroll_y) or (new_total_height != previous_total_height)
 
 def scrape_product_page(driver, url, position):
     try:
@@ -193,10 +222,10 @@ def scrape_product_page(driver, url, position):
           description_data = {
                 "N. PRODUCT_DESCRIPTION": get_elements_text("N",driver,'[data-testid="accordion-item-0"] > div > p:nth-child(1)'),#disclosure-\:rn\:  [data-testid="accordion-item-0"]
                 "M. PRODUCT_REFERENCE": get_elements_text("M",driver,'[data-testid="attribute-item-numero-de-produit"] + dd'),
-                "O. PATTERN": get_elements_text("O",driver,'[data-testid^="attribute-item-longueur"] + dd,[data-testid="attribute-item-longueur-du-vetement"]+dd'),
-            	"P. STYLE": get_elements_text("P",driver,'[data-testid^="attribute-item-style-de"] + dd ') or "Unknown",#[data-testid="attribute-item-clothing-style"] + dd, [data-testid="attribute-item-collar-style"] + dd, [data-testid="attribute-item-sleeve-style"]+ dd
-                "Q. FIT": get_elements_text("Q",driver,'[data-testid="attribute-item-tour-de-taille"] + dd,[data-testid="accordion-item-0"] > div > ul > li:nth-child(1)') or "Unknown",
-                "S. PERIPHERALS": get_elements_text("S",driver,'[data-testid="accordion-item-0"] > div > ul > li,[data-testid="accordion-item-0"] > div > p:not(:last-child):not(:first-child)') or "Unknown",
+                "O. PATTERN": (get_elements_text("O",driver,'[data-testid^="attribute-item-longueur') or "")+(get_elements_text("O",driver,'[data-testid="attribute-item-longueur-du-vetement"]+dd') or " ") + (get_elements_text("O2", driver,'[data-testid="attribute-item-longueur-des-manches"]+dd') or ""), 
+            	"P. STYLE": get_elements_text("P",driver,'[data-testid^="attribute-item-style-de"] + dd') or "Unknown",#[data-testid="attribute-item-clothing-style"] + dd, [data-testid="attribute-item-collar-style"] + dd, [data-testid="attribute-item-sleeve-style"]+ dd
+                "Q. FIT": get_elements_text("Q",driver,'[data-testid="attribute-item-tour-de-taille"]+ dd') + get_elements_text("Q",driver,'[data-testid="accordion-item-0"] > div > ul > li:nth-child(1)') or "Regular fit",
+                "S. PERIPHERALS": get_elements_text("S",driver,'[data-testid="accordion-item-0"] > div > ul > li')+ get_elements_text("S",driver,'[data-testid="accordion-item-0"] > div > p:not(:last-child):not(:first-child)') or "Unknown",
                 "T. COUNTRY_OF_ORIGIN": get_elements_text("T",driver,'[data-testid="accordion-item-3"]> div> ul > li > ul > li:nth-child(1) > p ') or "Unknown",
                 "W. FABRIC_COMPOSITION": get_elements_text("W",driver,'[data-testid="attribute-item-composition"] + dd'),
                 "R. NON_IRON": get_elements_text("R",driver,'[data-testid="accordion-item-2"]> ul > li > p') or "Unknown",
@@ -238,57 +267,95 @@ def scrape_product_page(driver, url, position):
         input("Please solve CAPTCHA and press Enter to continue...")
         return scrape_product_page(driver, url, position)  # Retry after CAPTCHA
     except Exception as e:
-        print(f"Error on {url}: {str(e)}")
+        print(f"Error on {url}: {str(e)} : {e.__traceback__}")
         return None
 
+def get_all_product_links(driver):
+    all_product_links = []
+    global_position = 0  # Track position across all pages
+    
+    # Loop through pages 1 to 88
+    for page in range(1,2): #89): 
+        url = f"https://www.cos.com/fr-fr/women/view-all?page={page}"
+        driver.get(url)
+        random_delay(driver)
+        click_if_needed(driver, "#onetrust-accept-btn-handler")
+        random_delay(driver)
+        click_if_needed(driver, '[aria-label="FERMER"]')
+        
+        # Get all product links with GLOBAL positions
+        product_elements = driver.find_elements(By.CSS_SELECTOR, "a.group.bg-main.text-main")
+        for elem in product_elements:
+            global_position += 1
+            all_product_links.append( (elem.get_attribute("href"), global_position) )
+        
+        print(f"Page {page}: Collected {len(product_elements)} products (Global position: {global_position})")
+        time.sleep(2)
+    
+    return all_product_links  # List of tuples (url, global_position)
+
+import os
+import pandas as pd
+import time
 
 def main():
     driver = setup_chrome_driver()
     all_products = []
     current_batch = []
-    batch_size = 100  # Save to Excel every n products
-    
+    batch_size = 90
     try:
-        # Loop through pages 1 to 88
-        for page in range(1, 89):
-            main_url = f"https://www.cos.com/fr-fr/women/view-all?page={page}"
-            main_url = check_redirection(main_url)
-            driver.get(main_url)
+        # Print working directory
+        print(f"Current working directory: {os.getcwd()}")
 
-            
-            
-            # Get all product links with their positions
-            product_elements = driver.find_elements(By.CSS_SELECTOR, "a.group.bg-main.text-main")
-            product_links = [(elem.get_attribute("href"), idx + 1) for idx, elem in enumerate(product_elements)]
-            
-            for url, position in product_links:
-                product_data = scrape_product_page(driver, url, position)
-                print(url)
-                if product_data:
-                    current_batch.append(product_data)
-                
-                # Save batch to Excel and clear memory
-                if len(current_batch) >= batch_size:
-                    df = pd.DataFrame(current_batch)
-                    df.to_excel(f'products_batch_{page}_{position//batch_size}.xlsx', index=False)
-                    all_products.extend(current_batch)
-                    current_batch = []
-                    
-                time.sleep(3)  # Polite delay between requests
+        # Step 1: Get all product links WITH GLOBAL POSITIONS
+        print("Collecting product links...")
+        product_links = get_all_product_links(driver)  # Returns (url, position) tuples
+        print(f"Total product links collected: {len(product_links)}")
         
-        # Save any remaining products
+        # Step 2: Scrape with global positions
+        print("Scraping product details...")
+        for idx, (url, global_pos) in enumerate(product_links):
+            print(f"Scraping product {idx+1}/{len(product_links)} (Global position: {global_pos})")
+            product_data = scrape_product_page(driver, url, global_pos)
+            
+            if product_data:
+                print("Data stored to current batch")
+                current_batch.append(product_data)
+            
+            # Batch saving
+            if len(current_batch) >= batch_size:
+                print(f"Current batch size: {len(current_batch)}")
+                df = pd.DataFrame(current_batch)
+                file_name = f'Cos_women_batch_{(idx//batch_size)+1}.xlsx'
+                try:
+                    df.to_excel(file_name, index=False)
+                    print(f"Saved batch to: {file_name}")
+                except Exception as e:
+                    print(f"Error saving file {file_name}: {str(e)}")
+                all_products.extend(current_batch)
+                current_batch = []
+            
+            time.sleep(3)
+        
+        # Final save
         if current_batch:
+            print(f"Final batch size: {len(current_batch)}")
             df = pd.DataFrame(current_batch)
-            df.to_excel(f'products_batch_Cos_final.xlsx', index=False)
+            file_name = 'products_batch_Cos_final.xlsx'
+            try:
+                df.to_excel(file_name, index=False)
+                print(f"Saved final batch to: {file_name}")
+            except Exception as e:
+                print(f"Error saving final file {file_name}: {str(e)}")
             all_products.extend(current_batch)
         
-        # Save complete dataset
+        # Save all products
         df_all = pd.DataFrame(all_products)
-        df_all.to_excel('cos_women_all.xlsx', index=False)
+        print(f"Files will be saved in: {os.getcwd()}")
+        df_all.to_excel('cos_women_all_new.xlsx', index=False)
             
     except Exception as e:
         print(f"Main error: {str(e)}")
-        
     finally:
         driver.quit()
 
