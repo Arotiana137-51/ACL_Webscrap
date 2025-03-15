@@ -405,7 +405,7 @@ def get_all_product_links(driver):
     #(Session info: chrome=134.0.6998.89)
    
     # Loop through pages 1 to 89  MISY KNITWEAR AO FA MILA JERENA A PARTIR AN'LE LIENS
-    for page in range(42,89): 
+    for page in range(78,89): 
         url = f"https://www.cos.com/fr-fr/women/view-all?page={page}"
         driver.get(url)
         #driver.implicitly_wait(10)
@@ -456,7 +456,7 @@ def main():
             if len(current_batch) >= batch_size:
                 print(f"Batch size reached: {len(current_batch)}")
                 df = pd.DataFrame(current_batch)
-                file_name = f'Cos_WOMEN_batch_B{(idx//batch_size)+1}.xlsx'
+                file_name = f'Cos_WOMEN_batch_C{(idx//batch_size)+1}.xlsx'
                 file_path = os.path.join(save_directory, file_name)  # Save to custom directory
                 try:
                     df.to_excel(file_path, index=False)
