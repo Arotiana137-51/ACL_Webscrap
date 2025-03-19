@@ -30,7 +30,7 @@ def update_column_z_woven():
     df.loc[woven_mask, col_z] = "woven"
     
     # Save the modified DataFrame
-    df.to_excel("All_Cos_Women_wear.xlsx", index=False)
+    df.to_excel("All_Cos_Women_wear_woven.xlsx", index=False)
     print("Column Z updated successfully with 'woven' markers")
 
 if __name__ == "__main__":

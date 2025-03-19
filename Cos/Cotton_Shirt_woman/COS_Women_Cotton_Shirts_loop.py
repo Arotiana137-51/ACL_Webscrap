@@ -335,7 +335,7 @@ def scrape_product_page(driver, url, position):
                 "Q. FIT": q_fit, #sady hita desc no hita aty 
                 "O. PATTERN": o_pattern,         	
                 "P. STYLE": p_style,
-                "W. FABRIC_COMPOSITION": get_elements_text("W",driver,'data-testid="attribute-item-composition"+ dd'),
+                "W. FABRIC_COMPOSITION": get_elements_text("W",driver,'[data-testid="attribute-item-composition"]+ dd'),
                 }
                 compliance_data = {}
                 if click_btn(driver,'span.underline.font_s_regular'):

@@ -14,6 +14,7 @@ import requests
 from urllib.parse import urlparse, parse_qs
 import re
 from datetime import datetime
+import os
 
 def setup_chrome_driver():
     service = Service(r'C:\\Users\\Arotiana\\Documents\\CromeDriver\\chromedriver-win64\\chromedriver.exe')
@@ -23,8 +24,7 @@ def setup_chrome_driver():
     options.add_argument("--start-maximized")
     #options.add_experimental_option("excludeSwitches", ["enable-automation"])
     #options.add_experimental_option('useAutomationExtension', False)
-   # options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.53 Safari/537.36')
-
+   
     # Initialize undetected Chrome driver
     driver = uc.Chrome(service=service, options=options)
     #driver = webdriver.Chrome(service=service, options=options)
@@ -367,18 +367,24 @@ def scrape_product_page(driver, url, position):
 
 
 def main():
-    product_name = "Ralph Lauren Women"
+    save_directory = "C:\Users\Arotiana\Documents\Scrap\Ralph_Lauren"  
+    product_name = "Ralph_Lauren_Women"
     product_link_selector = "div.product-name-row.favorite-enabled > div.product-name > a"
     driver = setup_chrome_driver()
+    
     all_product_links = []
     seen_hrefs = set()
     idx = 1
     retries = 0
-    max_retries = 50
+    max_retries = 175
     scroll_attempts = 0
+    
 
     try:
-        main_url = check_redirection("https://www.ralphlauren.com/women-clothing-sweaters?webcat=content-women-clothing-sweaters&ab=en_US_WLP_Slot_2_S1_Image_SHOP")
+        os.makedirs(save_directory, exist_ok=True)
+        print(f"Files will be saved in: {save_directory}")
+
+        main_url = check_redirection("https://www.ralphlauren.com/women-clothing?orignalCatID=women-clothing-view-all-mobile&altrurlID=women-clothing-view-all-mobile")
         driver.get(main_url)
         random_delay(driver)  # Reduced initial delay
 
@@ -413,37 +419,67 @@ def main():
         # Rest of your scraping logic remains the same
         current_batch = []
         all_products= []
-        batch_size = 100
+        batch_size = 60
 
         for url, position in all_product_links:
             random_delay(driver)
             product_data = scrape_product_page(driver, url, position)
             print(url)
+
+
             if product_data:
                 current_batch.append(product_data)
-            
-            # Save batch to Excel and clear memory
+                print(f"batched: {url}")
+  
+
+                  # Batch saving
             if len(current_batch) >= batch_size:
+                print(f"Batch size reached: {len(current_batch)}")
                 df = pd.DataFrame(current_batch)
-                df.to_excel(f'{product_name}_batch_{position//batch_size}.xlsx', index=False)
+                file_name = f'{product_name}_WOMEN_batch_C{(idx//batch_size)+1}.xlsx'
+                file_path = os.path.join(save_directory, file_name)  # Save to custom directory
+                try:
+                    df.to_excel(file_path, index=False)
+                    print(f"Saved batch to: {file_path}")
+                except Exception as e:
+                    print(f"Error saving file {file_path}: {str(e)}")
+                    import traceback
+                    traceback.print_exc()
                 all_products.extend(current_batch)
                 current_batch = []
-                
-            time.sleep(3)  # Polite delay between requests
+            
+            time.sleep(3)
         
-        # Save any remaining products
+     # Final save
         if current_batch:
+            print(f"Final batch size: {len(current_batch)}")
             df = pd.DataFrame(current_batch)
-            df.to_excel(f'{product_name}_batch_final.xlsx', index=False)
+            file_name = f'batch_{product_name}_final.xlsx'
+            file_path = os.path.join(save_directory, file_name)  # Save to custom directory
+            try:
+                df.to_excel(file_path, index=False)
+                print(f"Saved final batch to: {file_path}")
+            except Exception as e:
+                print(f"Error saving final file {file_path}: {str(e)}")
+                import traceback
+                traceback.print_exc()
             all_products.extend(current_batch)
         
-        # Save complete dataset
+        # Save all products
         df_all = pd.DataFrame(all_products)
-        df_all.to_excel(f'{product_name}.xlsx', index=False)
+        all_products_file = os.path.join(save_directory, f'{product_name}.xlsx')  # Save to custom directory
+        try:
+            df_all.to_excel(all_products_file, index=False)
+            print(f"Saved all products to: {all_products_file}")
+        except Exception as e:
+            print(f"Error saving all products file: {str(e)}")
+            import traceback
+            traceback.print_exc()
             
     except Exception as e:
         print(f"Main error: {str(e)}")
-        
+        import traceback
+        traceback.print_exc()
     finally:
         driver.quit()
 
